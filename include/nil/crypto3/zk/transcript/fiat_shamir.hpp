@@ -35,12 +35,19 @@
 #include <nil/crypto3/hash/sha2.hpp>
 #include <nil/crypto3/hash/keccak.hpp>
 
+#include <nil/crypto3/algebra/curves/pallas.hpp>
+#include <nil/crypto3/algebra/fields/arithmetic_params/pallas.hpp>
 #include <nil/crypto3/hash/poseidon.hpp>
+
+#include <nil/crypto3/hash/detail/poseidon/kimchi_constants.hpp>
+#include <nil/crypto3/hash/detail/poseidon/original_constants.hpp>
 #include <nil/crypto3/hash/detail/poseidon/poseidon_sponge.hpp>
 #include <nil/crypto3/hash/detail/poseidon/poseidon_policy.hpp>
+#include <nil/crypto3/hash/detail/poseidon/poseidon_permutation.hpp>
+#include <nil/crypto3/hash/detail/poseidon/poseidon_sponge.hpp>
+#include <nil/crypto3/hash/detail/block_stream_processor.hpp>
 
 #include <nil/crypto3/multiprecision/cpp_int.hpp>
-
 namespace nil {
     namespace crypto3 {
         namespace zk {
@@ -211,27 +218,31 @@ namespace nil {
                         state(hash<hash_type>(first, last)) {
                     }
 
-                    
-                    template<typename InputRange> 
+                    void operator()(const typename hash_type::digest_type input){
+                        auto tmp = pair_hash(state, state);
+                        state = pair_hash(input, tmp);
+                    }
+
+                    template<typename InputRange>
                     void operator()(const InputRange &r) {
-                        state = hash<hash_type>(r, hash<hash_type>(state));
+                        BOOST_ASSERT_MSG(false, "Not supported");
                     }
 
                     template<typename InputIterator>
                     void operator()(InputIterator first, InputIterator last) {
-                        state = hash<hash_type>(first, last, hash<hash_type>(state));
+                        BOOST_ASSERT_MSG(false, "Not supported");
                     }
 
                     template<typename Field>
                     typename Field::value_type challenge() {
-                        state = hash<hash_type>(state);
+                        state = pair_hash(state, state);
                         return state;
                     }
 
                     template<typename Integral>
                     Integral int_challenge() {
 
-                        state = hash<hash_type>(state);
+                        state = pair_hash(state, state);
 
                         Integral raw_result = state.data.template convert_to<Integral>();
 
@@ -251,7 +262,22 @@ namespace nil {
 
                 private:
                     typename hash_type::digest_type state;
+                    typename hash_type::digest_type pair_hash(typename hash_type::digest_type a1, typename hash_type::digest_type a2){
+                        using field_type = nil::crypto3::algebra::curves::pallas::base_field_type;
+                        using poseidon_policy = nil::crypto3::hashes::detail::mina_poseidon_policy<field_type>;
+                        using permutation_type = nil::crypto3::hashes::detail::poseidon_permutation<poseidon_policy>;
+                        using state_type = typename permutation_type::state_type;
 
+                        std::vector<typename field_type::value_type> a = {0, a1, a2};
+
+                        state_type poseidon_state;
+                        std::copy(a.begin(), a.end(), poseidon_state.begin());
+                        permutation_type::permute(poseidon_state);
+
+                        std::vector<typename field_type::value_type> result(3);
+                        std::copy(poseidon_state.begin(), poseidon_state.end(), result.begin());
+                        return result[2];
+                    }
                 };
 
             }    // namespace transcript
