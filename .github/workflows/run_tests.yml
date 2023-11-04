@@ -118,7 +118,7 @@ jobs:
 
       - name: Build
         working-directory: ./build
-        run: cmake --build . -t ${{ matrix.target }}
+        run: cmake --build . -t ${{ matrix.target }} -j 1
 
       - name: Run test
         working-directory: ./build
