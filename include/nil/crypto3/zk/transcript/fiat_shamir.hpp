@@ -243,10 +243,19 @@ namespace nil {
                     Integral int_challenge() {
 
                         state = pair_hash(state, state);
+                        nil::marshalling::status_type status;
 
-                        Integral raw_result = state.data.template convert_to<Integral>();
-
-                        return raw_result;
+                        std::cout << "State = " << std::hex << state << std::dec << std::endl;
+                        nil::crypto3::multiprecision::cpp_int intermediate_result = nil::marshalling::pack(state, status);
+                        Integral result = 0;
+                        Integral factor = 1;
+                        while (intermediate_result > 0) {
+                            result += factor * (Integral)(intermediate_result%0x100);
+                            factor *= 0x100;
+                            intermediate_result = intermediate_result/0x100;
+                        }
+                        std::cout << "Integral challenge = " << std::hex << result << std::dec << std::endl;
+                        return result;
                     }
 
                     template<typename Field, std::size_t N>
