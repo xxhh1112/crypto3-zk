@@ -84,7 +84,7 @@ namespace nil {
                     const ColumnType& operator[](std::uint32_t index) const {
                         if (index < ArithmetizationParams::witness_columns)
                             return _witnesses[index];
-                        throw std::out_of_range("Public table index out of range."); 
+                        throw std::out_of_range("Public table index out of range.");
                     }
 
                     constexpr std::uint32_t size() const {
@@ -200,7 +200,7 @@ namespace nil {
                         if (index < selectors_amount()) {
                             return selector(index);
                         }
-                        throw std::out_of_range("Public table index out of range."); 
+                        throw std::out_of_range("Public table index out of range.");
                     }
 
                     constexpr std::uint32_t size() const {
@@ -262,11 +262,11 @@ namespace nil {
                         return _public_table.selector(index);
                     }
 
-                    void fill_constant(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_constant(std::uint32_t index, const ColumnType& column) {
                         _public_table.fill_constant(index, column);
                     }
 
-                    void fill_selector(std::uint32_t index, const ColumnType& column) {
+                    virtual void fill_selector(std::uint32_t index, const ColumnType& column) {
                         _public_table.fill_selector(index, column);
                     }
 
@@ -292,7 +292,7 @@ namespace nil {
                         index -= _private_table.size();
                         if (index < _public_table.size())
                             return _public_table[index];
-                        throw std::out_of_range("Private table index out of range."); 
+                        throw std::out_of_range("Private table index out of range.");
                     }
 
                     const private_table_type& private_table() const {
