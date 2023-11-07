@@ -79,7 +79,7 @@ namespace nil {
                                             const lookup_tables_type &lookup_tables = {}
                     ) :
                         _gates(gates),
-                        _copy_constraints(copy_constraints), 
+                        _copy_constraints(copy_constraints),
                         _lookup_gates(lookup_gates),
                         _lookup_tables(lookup_tables)
                     {
@@ -133,7 +133,7 @@ namespace nil {
                     std::size_t sorted_lookup_columns_number() const {
                         if(_lookup_gates.size() == 0){
                             return 0;
-                        }   
+                        }
                         return lookup_options_num() + lookup_constraints_num();
                     }
 
@@ -152,7 +152,25 @@ namespace nil {
                         }
                         return result;
                     }
-                
+
+                    std::size_t lookup_expressions_num() const{
+                        std::size_t result = 0;
+                        for(std::size_t i = 0; i < _lookup_gates.size(); ++i) {
+                            for(std::size_t j = 0; j < _lookup_gates[i].constraints.size(); ++j) {
+                                result += _lookup_gates[i].constraints[j].lookup_input.size();
+                            }
+                        }
+                        return result;
+                    }
+
+                    std::size_t lookup_tables_columns_num() const{
+                        std::size_t result = 0;
+                        for(std::size_t i = 0; i < _lookup_tables.size(); ++i) {
+                            result += _lookup_tables[i].lookup_options[0].size() * _lookup_tables[i].lookup_options.size();
+                        }
+                        return result;
+                    }
+
                     bool operator==(const plonk_constraint_system<FieldType, ArithmetizationParams> &other) const {
                         return (this->_gates == other._gates) && (this->_copy_constraints == other._copy_constraints) &&
                                (this->_lookup_gates == other._lookup_gates) && (this->_lookup_tables == other._lookup_tables);
